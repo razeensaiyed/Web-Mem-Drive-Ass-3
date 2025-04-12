@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Memento</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #e17b0d;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 80px);
+      gap: 10px;
+    }
+
+    .card {
+      width: 80px;
+      height: 80px;
+      background-color: #444;
+      color: rgb(0, 0, 0);
+      font-size: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 8px;
+      user-select: none;
+    }
+
+    .flipped {
+      background-color: #f3a840;
+    }
+
+    .matched {
+      background-color: #00000000;
+      cursor: default;
+    }
+
+    .message {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #000000;
+    }
+
+    .restart-button {
+      margin-top: 15px;
+      padding: 8px 16px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #543805;
+      color: rgb(0, 0, 0);
+      cursor: pointer;
+    }
+
+    .restart-button:hover {
+      background-color: #b38600;
+    }
+  </style>
+</head>
+<body>
+  <h1>Memento: The Memory Game</h1>
+   <p>Welcome back, Leonard Shelby. You've been here before...</p>
+  <div id="root"></div>
+
+  <!-- Load React -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <!-- Game Script -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function App() {
+      const emojiSet = ['☎️', '🔫', '🔪', '📷'];
+
+      const generateCards = () => {
+        const shuffled = [...emojiSet, ...emojiSet].sort(() => Math.random() - 0.5);
+        return shuffled;
+      };
+
+      const [cards, setCards] = useState(generateCards);
+      const [flipped, setFlipped] = useState([]);
+      const [matched, setMatched] = useState([]);
+      const [moves, setMoves] = useState(0);
+      const [gameOver, setGameOver] = useState(false);
+
+      useEffect(() => {
+        if (matched.length === cards.length) {
+          setGameOver(true);
+        }
+      }, [matched]);
+
+      function handleClick(index) {
+        if (flipped.length === 2 || flipped.includes(index) || matched.includes(index)) return;
+
+        const newFlipped = [...flipped, index];
+        setFlipped(newFlipped);
+
+        if (newFlipped.length === 2) {
+          setMoves(prev => prev + 1);
+          const [i, j] = newFlipped;
+          if (cards[i] === cards[j]) {
+            setMatched([...matched, i, j]);
+          }
+          setTimeout(() => setFlipped([]), 800);
+        }
+      }
+
+      function restartGame() {
+        setCards(generateCards());
+        setFlipped([]);
+        setMatched([]);
+        setMoves(0);
+        setGameOver(false);
+      }
+
+      return (
+        <div style={{ textAlign: 'center' }}>
+          <div className="stats">
+            <p>Moves: {moves}</p>
+          </div>
+
+          <div className="grid">
+            {cards.map((symbol, index) => {
+              const isFlipped = flipped.includes(index) || matched.includes(index);
+              return (
+                <div
+                  key={index}
+                  className={`card ${isFlipped ? 'flipped' : ''} ${matched.includes(index) ? 'matched' : ''}`}
+                  onClick={() => handleClick(index)}
+                >
+                  {isFlipped ? symbol : "?"}
+                </div>
+              );
+            })}
+          </div>
+
+          {gameOver && (
+            <div className="message">
+             Congratulations. You finished the game in {moves} moves.
+            </div>
+          )}
+
+          <button className="restart-button" onClick={restartGame}>
+            Restart Game
+          </button>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
